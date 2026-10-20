@@ -147,7 +147,7 @@ proc atom(token: string): Exp =
       # and can also result in an incorrect parse length; therefore, we safely check for both cases
       if floatVal == Inf or floatVal == -Inf:
         raise newException(LispError,
-          "float overflow error: '" & token & "' is out of range for standard Float")
+          "float overflow: '" & token & "' is out of range for standard Float")
       return Exp(kind: ekFloat, flo: floatVal)
   except ValueError:
     var isFloatFormat = true
@@ -159,15 +159,12 @@ proc atom(token: string): Exp =
         break
     if isFloatFormat and token.len > 0:
       raise newException(LispError,
-        "float overflow error: '" & token & "' is out of range for standard Float")
+        "float overflow: '" & token & "' is out of range for standard Float")
 
-  # 4. If the process reaches this point despite starting with a digit (meaning numeric parsing failed),
-  # it indicates the presence of an invalid character.
-  if token.len > 0 and token[0] in {'0'..'9'} and token[0] notin {'+', '-'}:
-    raise newException(LispError,
-      "invalid numeric format or symbol name '" & token & "'")
+  if token.len >= 2 and token[0] in {'0'..'9', '+', '-'}:
+    raise newException(LispError, "invalid numeric format or symbol name '" & token & "'")
 
-  # 5. If it's neither, then it's a symbol
+  # 4. If it's neither, then it's a symbol
   return Exp(kind: ekSymbol, sym: token)
 
 proc parse(program: string): Exp =
@@ -726,7 +723,8 @@ proc repl(prompt: string) =
   var line: string
   while true:
     let ok = readLineFromStdin(prompt, line)
-    if not ok: break # ctrl-C or ctrl-Z + ENTER will cause a break
+    if not ok:
+      break # ctrl-C or ctrl-Z + ENTER will cause a break
     # Trim leading and trailing whitespaces
     let trimmed = line.strip()
     # Skip parsing if the input is empty or contains only spaces
