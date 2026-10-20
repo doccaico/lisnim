@@ -1,4 +1,4 @@
-; (print "Hello, Lisp")
+(print "Hello, Lisp")
 
 (define circle-area (lambda (r) (* pi (* r r))))
 (print (circle-area 3))
